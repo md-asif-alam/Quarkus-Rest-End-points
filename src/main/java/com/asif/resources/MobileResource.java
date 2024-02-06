@@ -6,52 +6,72 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Path("/mobile")
 public class MobileResource {
-
-    List<String> mobileList=new ArrayList<>();
+    List<Mobile> mobileList = new ArrayList<>();
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response getMobileList(){
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMobileList() {
         return Response.ok(mobileList).build();
     }
 
+
     @POST
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response addNewMobile(String mobileName){
-        mobileList.add(mobileName);
-        return Response.ok(mobileName).build();
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createMobile(Mobile mobile) {
+        mobileList.add(mobile);
+        return Response.ok(mobile).build();
     }
 
     @PUT
-    @Path("/{oldmobilename}")
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.TEXT_PLAIN)
-    public Response updateMobile(@PathParam("oldmobilename") String oldMobileName , @QueryParam("newmobilename") String newMobileName){
-       mobileList= mobileList.stream().map(mobile->{
-            if(mobile.equals(oldMobileName)){
-                return newMobileName;
-            }else{
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateMobile(@PathParam("id") int id, Mobile mobileToUpdate) {
+        mobileList = mobileList.stream().map(mobile -> {
+            if (mobile.getId() == id) {
+                return mobileToUpdate;
+            } else {
                 return mobile;
             }
         }).collect(Collectors.toList());
+
         return Response.ok(mobileList).build();
     }
 
     @DELETE
-    @Path("/{mobileToDelete}")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response deleteMobile(@PathParam("mobileToDelete") String deleteMobile){
-        boolean isRemoved = mobileList.remove(deleteMobile);
-        if(isRemoved){
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteMobile(@PathParam("id") int mid) {
+
+        Optional<Mobile> mobileToDelete = mobileList.stream().filter(mobile -> mobile.getId() == mid).findFirst();
+        if (mobileToDelete.isPresent()) {
+            mobileList.remove(mobileToDelete.get());
             return Response.ok(mobileList).build();
-        }else{
+        } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
+
     }
+
+
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMobileById(@PathParam("id") int mid) {
+
+        Optional<Mobile> mobileToGet = mobileList.stream().filter(mobile -> mobile.getId() == mid).findFirst();
+        if (mobileToGet.isPresent()) {
+            return Response.ok(mobileToGet.get()).build();
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+    }
+
 }
